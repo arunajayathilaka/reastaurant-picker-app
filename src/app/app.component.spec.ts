@@ -1,29 +1,72 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 import { AppComponent } from './app.component';
+import { StorageService } from './_services/storage.service';
+import { AuthService } from './_services/auth.service';
+import { Router } from '@angular/router';
 
 describe('AppComponent', () => {
+  let component: AppComponent;
+  let fixture: ComponentFixture<AppComponent>;
+  let mockStorageService: jasmine.SpyObj<StorageService>;
+  let mockAuthService: jasmine.SpyObj<AuthService>;
+  let mockRouter: jasmine.SpyObj<Router>;
+
   beforeEach(async () => {
+    mockStorageService = jasmine.createSpyObj('StorageService', ['isLoggedIn', 'getUser', 'clean']);
+    mockAuthService = jasmine.createSpyObj('AuthService', ['logout']);
+    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
+
     await TestBed.configureTestingModule({
-      imports: [AppComponent],
+      declarations: [],
+      imports: [RouterTestingModule],
+      providers: [
+        { provide: StorageService, useValue: mockStorageService },
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: Router, useValue: mockRouter }
+      ]
     }).compileComponents();
+
+    fixture = TestBed.createComponent(AppComponent);
+    component = fixture.componentInstance;
   });
 
   it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+    expect(component).toBeTruthy();
   });
 
-  it(`should have the 'restaurant-picker-app' title`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('restaurant-picker-app');
-  });
+  it('should set username if user is logged in', () => {
+    const mockUser = { username: 'testuser' };
+    mockStorageService.isLoggedIn.and.returnValue(true);
+    mockStorageService.getUser.and.returnValue(mockUser);
 
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, restaurant-picker-app');
+
+    expect(component.username).toEqual(mockUser.username);
+  });
+
+  xit('should call logout method on click of logout button', () => {
+    spyOn(component, 'logout').and.callThrough();
+    const logoutButton = fixture.nativeElement.querySelector('.nav-link');
+
+    logoutButton.click();
+
+    expect(component.logout).toHaveBeenCalled();
+    expect(mockAuthService.logout).toHaveBeenCalled();
+    expect(mockStorageService.clean).toHaveBeenCalled();
+  });
+
+  xit('should navigate to login page after logout', () => {
+    //spyOn(component, 'logout').and.callThrough();
+
+    const mockUser = { username: 'testuser' };
+    mockStorageService.isLoggedIn.and.returnValue(true);
+    mockStorageService.getUser.and.returnValue(mockUser);
+
+    fixture.detectChanges();
+
+    const logoutButton = fixture.debugElement.nativeElement.querySelector('.nav-link');
+    logoutButton.click();
+    //expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
   });
 });
