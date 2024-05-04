@@ -1,0 +1,6 @@
+{
+    "/api": {
+      "target": "http://restaurant-picker-api-container:8080",
+      "secure": false
+    }
+  }
